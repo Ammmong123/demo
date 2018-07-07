@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>时间动画</title>
+</head>
+<body>
+	<canvas id="time" style="border: 1px solid #a1a1a1; display: block; margin: 50px auto;"></canvas>
+
+
+	<script src="digit.js"></script>
+	<script>
+		
+		var clockBall = (function () {
+			// 参数初始化
+			var defaults = {
+				clockWidth: 730,
+				clockHeight: 250,
+				marginLeft: 30,
+				marginTop: 30,
+				ballRadius: 5
+			};
+
+			var canv = document.getElementById('time');
+			var cont = canv.getContext("2d");
+			var ballRadius =defaults.ballRadius;
+			var marginLeft =defaults.marginLeft;
+			var marginTop =defaults.marginTop;
+			var marginLeftNum = 2*(ballRadius + 1);
+			var myDateNow = new Date();
+			var balls = [];
+			var clockWidth = defaults.clockWidth;
+			var clockHeight = defaults.clockHeight;
+
+			canv.width = clockWidth;
+			canv.height = clockHeight;
+
+			// 增加小球对象，传入小球初始xy位置(x位置参考drawNumber函数)、显示数字和所有小球数组
+		    var addBall = function (x, y, num) {
+		    	for (var i = 0; i < digit[num].length; i++) {
+		    		for (var j = 0; j < digit[num][i].length; j++) {
+		    			if (digit[num][i][j] == 1) {
+		    				var aBall = {
+		    					x:x + j*2*(ballRadius + 1),
+		    					y:y + i*2*(ballRadius + 1),
+		    					g:1.5,
+		    					vx:parseInt(Math.random()*12 - 6),
+		    					vy:-3,
+		    					color: "rgb(0 100, 200)"  
+		    				};
+		    				balls.push(aBall);
+		    			}
+		    		}
+		    	}
+		    };
+
+			// 在数字改变的时候添加小球信息 
+			var drawBalls = function () {
+				var nextData = new Date();
+				var nextHour = nextData.getHours();
+				var nextMinutes = nextData.getMinutes();
+				var nextSeconds = nextData.getSeconds();
+				var hour = myDateNow.getHours();
+				var minutes = myDateNow.getMinutes();
+				var seconds = myDateNow.getSeconds();
+
+				if (nextSeconds != seconds) {
+					console.log(nextSeconds != seconds);
+					if(parseInt(nextSeconds%10) != parseInt(seconds%10)){
+						addBall (marginLeft + 48*marginLeftNum, marginTop, parseInt(seconds%10));
+					}
+					if(parseInt(nextSeconds/10) != parseInt(seconds/10)){
+						addBall (marginLeft + 40*marginLeftNum, marginTop, parseInt(seconds/10));
+					}
+
+					if(parseInt(nextMinutes%10) != parseInt(minutes%10)){
+						addBall (marginLeft + 36*marginLeftNum, marginTop, 10);
+						addBall (marginLeft + 28*marginLeftNum, marginTop, parseInt(minutes%10));
+					}
+					if(parseInt(nextMinutes/10) != parseInt(minutes/10)){
+						addBall (marginLeft + 20*marginLeftNum, marginTop, parseInt(minutes/10));
+					}
+
+					if(parseInt(nextHour%10) != parseInt(hour%10)){
+						addBall (marginLeft + 16*marginLeftNum, marginTop, 10);
+						addBall (marginLeft + 8*marginLeftNum, marginTop, parseInt(hour%10));
+					}
+					if(parseInt(nextHour/10) != parseInt(hour/10)){
+						addBall (marginLeft + 0*marginLeftNum, marginTop, parseInt(hour/10));
+					}
+					myDateNow = nextData;
+				}
+			};
+
+			// 更新小球运动参数
+			var updataBall = function () {
+				console.log(balls.length);
+
+				for (var i = 0; i < balls.length; i++) {
+					balls[i].x +=  balls[i].vx;
+					balls[i].y += balls[i].vy;
+					balls[i].vy += balls[i].g;
+					if (balls[i].y >= clockHeight - ballRadius ) {
+						balls[i].vy = -0.5*balls[i].vy;
+					}
+					if (balls.length > 500) {
+						balls.shift();
+					} 
+				}
+			};
+	
+			// 显示数字时钟
+			// 传入左边距marginLeft、上边距marginTop、更新的时间对象、和绘制对象
+			var rendomNum = function (x, y, num, cont) {
+
+				var hour = num.getHours();
+				var minutes = num.getMinutes();
+				var seconds = num.getSeconds();
+				cont.clearRect(0, 0, canv.width, canv.height);
+
+				drawNumber (x, y, parseInt(hour/10), cont);
+				drawNumber (x + 8*marginLeftNum, y, parseInt(hour%10), cont);
+				drawNumber (x + 16*marginLeftNum, y, 10, cont);
+
+				drawNumber (x + 20*marginLeftNum, y, parseInt(minutes/10), cont);
+				drawNumber (x + 28*marginLeftNum, y, parseInt(minutes%10), cont);
+				drawNumber (x + 36*marginLeftNum, y, 10, cont);
+
+				drawNumber (x + 40*marginLeftNum, y, parseInt(seconds/10), cont);
+				drawNumber (x + 48*marginLeftNum, y, parseInt(seconds%10), cont);	
+
+				for (var i = 0; i < balls.length; i++) {
+					cont.fillStyle = "rgb(0 100, 200)";
+					cont.beginPath();
+					cont.arc(balls[i].x, balls[i].y, ballRadius, 0, 2*Math.PI);
+					cont.fill();
+				}
+
+			};
+
+		    // 绘制数字函数
+		    var drawNumber = function (x, y, num, cont) {
+		    	cont.fillStyle = "rgb(0 100, 200)";
+		    	for (var i = 0; i < digit[num].length; i++) {
+		    		for (var j = 0; j < digit[num][i].length; j++) {
+		    			if (digit[num][i][j] == 1) {
+		    				cont.beginPath();
+		    				cont.arc(x + 2*j*(ballRadius+1), y + 2*i*(ballRadius+1), ballRadius, 0, 2*Math.PI);
+		    				cont.closePath();
+		    				cont.fill();
+		    			}
+		    		}
+		    	}
+		    };
+		    var init = function () {
+		    	setInterval(function () {
+		    		rendomNum(marginLeft, marginTop, myDateNow, cont);
+		    		drawBalls();
+		    		updataBall();
+		    		console.log('a');
+
+		    	}, 30);
+		    };
+
+		 	return {
+		 		init:init
+		 	};
+
+		}());
+		clockBall.init();
+
+
+
+	
+	</script>
+
+</body>
+</html>

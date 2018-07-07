@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>星级评分</title>
+	<style>
+	body,ul,li,div{
+		padding: 0;
+		margin: 0;
+	}
+
+	li{
+		list-style-type: none;
+	}
+
+	.rating{
+		width: 160px;
+		height: 32px;
+		margin: 100px auto;
+	}
+
+	.rating-item{
+		float: left;
+		width: 32px;
+		height: 32px;
+		background: url(image/stars.png) no-repeat;
+		cursor: pointer;
+	}	
+</style>
+</head>
+<body>
+
+
+	<!-- 第一种 -->
+	<ul class="rating" id="rating">
+		<li class="rating-item" title="很不好"></li>
+		<li class="rating-item" title="不好"></li>
+		<li class="rating-item" title="一般"></li>
+		<li class="rating-item" title="好"></li>
+		<li class="rating-item" title="很好"></li>
+	</ul>
+
+	<ul class="rating" id="rating2">
+		<li class="rating-item" title="很不好"></li>
+		<li class="rating-item" title="不好"></li>
+		<li class="rating-item" title="一般"></li>
+		<li class="rating-item" title="好"></li>
+		<li class="rating-item" title="很好"></li>
+	</ul>
+
+	<!-- js -->
+	<script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+	<script>
+
+		var star = (function(){
+			// 寄生继承
+			var extendStar = function(subClass, superClass){
+				var air = function(){};
+				air.prototype = superClass.prototype;
+				subClass.prototype = new air();
+				subClass.prototype.construtor = subClass;
+			};
+			// 默认参数
+			var defaults = {
+				mode: 'lightEntire',
+				starNum: 2.4,
+				readOnly: false
+			};
+
+			var light = function(el, options){
+				this.$el = $(el);
+				this.$item = this.$el.find('.rating-item');
+				this.opts = options; 
+				this.add = 1;
+				this.selectEvent = 'mouseover'
+			};
+			light.prototype.initStar = function(){
+				this.lightOn(this.opts.starNum);
+				this.bindEvent();
+			};
+			// 点亮
+			light.prototype.lightOn = function(starNum){
+				starNum = parseInt(starNum);
+				this.$item.each(function (index) {
+					if (index < starNum) {
+						$(this).css('background-position', '0 -41px');	
+					} else{
+						$(this).css('background-position', '0 0');
+					}
+				});
+			};
+			// 事件绑定
+			light.prototype.bindEvent = function(){
+				var self = this;
+				self.$el.on(self.selectEvent,'.rating-item', function(e){
+					var $this = $(this);
+					self.select(e, $this);
+					self.lightOn($(this).index() + self.add);
+					console.log($(this).index() + self.add + '/' + self.$item.length);
+				}).on('click', '.rating-item', function(){
+					self.opts.starNum = $(this).index() + self.add;
+				}).on('mouseout', function () {
+					self.lightOn(self.opts.starNum);
+				});
+			};
+
+			// 点亮整颗
+			var lightEntire = function(el, options){
+				// 获取父类实例属性方法
+				light.call(this, el, options);
+				this.selectEvent = 'mouseover';
+			};
+			// 继承父类原型链属性与方法
+			extendStar(lightEntire, light);
+			// 点亮
+			lightEntire.prototype.lightOn = function(starNum){
+				light.prototype.lightOn.call(this, starNum);
+			};
+			lightEntire.prototype.select = function(){
+				self.add = 1;
+			}
+		
+
+			// 点亮半颗函数
+			var lightHalf = function(el, options){
+				light.call(this, el, options);
+				this.selectEvent = 'mousemove'
+			};
+			extendStar(lightHalf, light);
+			// 点亮
+			lightHalf.prototype.lightOn = function(starNum){
+				var isHalf = parseInt(starNum) !==starNum;
+				light.prototype.lightOn.call(this, starNum);
+				if (isHalf) {
+					this.$item.eq(parseInt(starNum)).css('background-position', '0 -82px');
+				};
+			};
+			lightHalf.prototype.select = function(e, $this){
+				if (e.pageX - $this.offset().left < $this.width()/2){
+						this.add = 0.5;
+					} else {
+						this.add = 1;
+					}
+				};
+			var mode = {
+				'lightHalf': lightHalf,
+				'lightEntire': lightEntire 
+			};
+			// 初始化
+			var init = function(el, options){
+				options = $.extend({}, defaults, options);
+				if (!mode[options.mode]) {
+					options.mode = 'lightEntire'
+				};
+				new mode[options.mode](el, options).initStar();
+			};
+			// jquery插件
+			$.fn.extend({
+				light: function(options){
+					return this.each(function(){
+						init(this, options);
+					});
+				}
+			});
+			return{
+				initFn:init
+			};		
+		}());
+		// 调用方式
+		// 用获取jQuery对象，调用light方法并传入options对象，其中
+		// mode为点亮整颗半颗
+		// starNum为初始点亮数
+		$('#rating').light({
+			mode: 'ligh'
+		});	
+		$('#rating2').light({
+			mode: 'lightHalf'
+		});		
+	</script>
+
+</body>
+</html>
