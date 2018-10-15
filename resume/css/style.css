@@ -306,11 +306,11 @@ a {
 .content-hd .skill-level .i-js .out {
   flex: 4;
 }
-.content-hd .skill-level .i-jq .in {
-  flex: 5;
+.content-hd .skill-level .i-wx .in {
+  flex: 7;
 }
-.content-hd .skill-level .i-jq .out {
-  flex: 5;
+.content-hd .skill-level .i-wx .out {
+  flex: 3;
 }
 @media screen and (max-width: 1024px) {
   .content-hd .skill-level {
